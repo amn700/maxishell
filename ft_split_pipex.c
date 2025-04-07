@@ -1,5 +1,37 @@
 #include "minishell.h"
 
+int	is_quote(char c)
+{
+	return (c == 34 || c == 39);
+}
+
+int	is_whitespace(char c)
+{
+	return (c == 32 || (c >= 9 && c <= 13));
+}
+
+char	*ft_strdup_pipex(char *str)
+{
+	int		i;
+	int		size;
+	char	*new;
+
+	size = 0;
+	while (!is_whitespace(str[size]) && !is_quote(str[size]) && str[size])
+		size++;
+	new = malloc(size + 1);
+	if (new == NULL)
+		return (NULL);
+	i = 0;
+	while (i < size)
+	{
+		new[i] = str[i];
+		i++;
+	}
+	new[size] = '\0';
+	return (new);
+}
+
 void	quote_pipex(char **str, char **matrix, char type, int i)
 {
 	int	j;
@@ -55,26 +87,60 @@ char	**fill_matrix(char **matrix, char *str)
 	return (matrix);
 }
 
-char	*ft_strdup_pipex(char *str)
-{
-	int		i;
-	int		size;
-	char	*new;
 
-	size = 0;
-	while (!is_whitespace(str[size]) && !is_quote(str[size]) && str[size])
-		size++;
-	new = malloc(size + 1);
-	if (new == NULL)
-		return (NULL);
-	i = 0;
-	while (i < size)
+
+void	quotes(char *str, int *i, int *count, char type)
+{
+	int	j;
+	
+	j = *i;
+	while (str[j] && str[j] != type)
+	j++;
+	if (str[j] == type)
 	{
-		new[i] = str[i];
+		j++;
+		*i = j;
+		(*count)++;
+	}
+	else
+	{
+		perror("closing quote not found !!");
+		exit(1);
+	}
+}
+
+void	quotes_check(char *str, int *i, int *count)
+{
+	if (str[*i] == 39)
+	{
+		(*i)++;
+		quotes(str, i, count, 39);
+	}
+	else if (str[*i] == 34)
+	{
+		(*i)++;
+		quotes(str, i, count, 34);
+	}
+}
+
+int	count_words(char *str)
+{
+	int	i;
+	int	count;
+	
+	i = 0;
+	count = 0;
+	while (str[i])
+	{
+		while (str[i] && is_whitespace(str[i]))
+		i++;
+		quotes_check(str, &i, &count);
+		if (str[i] && !is_quote(str[i]) && !is_whitespace(str[i]))
+		count++;
+		while (str[i] && !is_quote(str[i]) && !is_whitespace(str[i]))
 		i++;
 	}
-	new[size] = '\0';
-	return (new);
+	return (count);
 }
 
 char	**ft_split_pipex(char *s)
